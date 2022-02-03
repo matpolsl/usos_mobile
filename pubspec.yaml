@@ -32,6 +32,7 @@ dependencies:
   html: ^0.15.0
   oauth1: ^2.0.0
   url_launcher: ^6.0.18
+  http: ^0.13.4
 
 dev_dependencies:
   flutter_test:

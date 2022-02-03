@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:oauth1/oauth1.dart' as oauth1;
 
-import 'package:usos/widgets/Login.dart';
+import 'package:usos/widgets/login.dart';
+import 'package:usos/widgets/user.dart';
 
 void main() {
   runApp(MyApp());
@@ -31,12 +32,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  var _status = true;
+  late oauth1.Client _client;
+  _setStatus(status, client) {
+    setState(() {
+      _status = status;
+      _client = client;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return null == null //todo read token
-        ? Login()
-        : Container(
-            child: Text("Zalogowany"),
-          );
+    return _status //todo read token
+        ? Login(_setStatus)
+        : User(_client);
   }
 }

@@ -4,14 +4,19 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../usos.dart';
 
+
+
 class Login extends StatelessWidget {
   final pinController = TextEditingController();
+  final setStatus;
+  Login(this.setStatus);
   var temporaryCredentials;
   void _authWeb() async {
     auth.requestTemporaryCredentials('oob').then((res) {
       temporaryCredentials = res;
       print(temporaryCredentials.credentials.toString());
-      launch(auth.getResourceOwnerAuthorizationURI(temporaryCredentials.credentials.token));
+      launch(auth.getResourceOwnerAuthorizationURI(
+          temporaryCredentials.credentials.token));
     });
   }
 
@@ -21,13 +26,14 @@ class Login extends StatelessWidget {
 
   void _authButton() {
     _authPin(pinController.text).then((res) async {
-      final oauth1.Client client = oauth1.Client(
+      final client = oauth1.Client(
           platform.signatureMethod, clientCredentials, res.credentials);
       // now you can access to protected resources via client
       client
           .get(Uri.parse('https://usosapi.polsl.pl/services/users/user'))
           .then((res) {
         print(res.body);
+        setStatus(false,client);
         //services/courses/user
         //services/progs/student
         //services/grades/course_edition2?course_id=".$kurs."&term_id=2020/2021-Z
