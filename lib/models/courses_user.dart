@@ -1,9 +1,9 @@
 class CoursesUser {
   final String courseId;
   final String name;
-  final double? grade;
+  double? grade;
   final int? ects;
-  const CoursesUser({
+  CoursesUser({
     required this.courseId,
     required this.name,
     this.grade,
