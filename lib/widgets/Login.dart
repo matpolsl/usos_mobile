@@ -4,8 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../usos.dart';
 
-
-
 class Login extends StatelessWidget {
   final pinController = TextEditingController();
   final setStatus;
@@ -29,11 +27,9 @@ class Login extends StatelessWidget {
       final client = oauth1.Client(
           platform.signatureMethod, clientCredentials, res.credentials);
       // now you can access to protected resources via client
-      client
-          .get(Uri.parse('https://usosapi.polsl.pl/services/users/user'))
-          .then((res) {
+      client.get(Uri.parse(usosApi + 'services/users/user')).then((res) {
         print(res.body);
-        setStatus(false,client);
+        setStatus(false, client);
         //services/courses/user
         //services/progs/student
         //services/grades/course_edition2?course_id=".$kurs."&term_id=2020/2021-Z
