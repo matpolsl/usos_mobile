@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:usos/models/courses_user.dart';
@@ -7,6 +7,7 @@ import 'package:usos/models/terms.dart';
 import 'package:usos/models/user_data.dart';
 
 import 'package:usos/usos.dart';
+import 'package:usos/widgets/subject.dart';
 import 'login.dart';
 
 class User extends StatefulWidget {
@@ -53,14 +54,24 @@ class _UserState extends State<User> {
                 term))
             .then((res) {
           final json = (jsonDecode(res.body))['course_grades'] as List;
-          userGrades.add(CoursesUser(
-            courseId: element.courseId,
-            name: element.name,
-            grade: json[0]['1'] == null
-                ? null
-                : double.parse(json[0]['1']['value_symbol']),
-          ));
-          print(userGrades.last.name + " " + userGrades.last.grade.toString());
+          print("https://usos.ct8.pl/ects.php?CODE=" + element.courseId);
+          http
+              .get(Uri.parse(
+                  "https://usos.ct8.pl/ects.php?CODE=" + element.courseId))
+              .then((res) {
+            final ects = (jsonDecode(res.body))['ects'];
+            print(ects);
+            userGrades.add(CoursesUser(
+              courseId: element.courseId,
+              name: element.name,
+              grade: json[0]['1'] == null
+                  ? null
+                  : double.parse(json[0]['1']['value_symbol']),
+              ects: ects,
+            ));
+            print(
+                userGrades.last.name + " " + userGrades.last.grade.toString());
+          });
         });
       });
     });
@@ -68,8 +79,8 @@ class _UserState extends State<User> {
   }
 
   Future<List<CoursesUser>> fetchCoursesByLastTerm() async {
-    var terms = await fetchTerms();
-    return fetchCoursesByTerm(terms.last.termId);
+    var term = await terms;
+    return fetchCoursesByTerm(term.last.termId);
   }
 
   Future<Map<String, dynamic>> fetchCourses() async {
@@ -111,40 +122,31 @@ class _UserState extends State<User> {
           },
         ),
         //testy
+
         SizedBox(
           height: 500,
           child: FutureBuilder<List<CoursesUser>>(
             future: _nowCourses,
             builder: (context, snapshot) {
-              // WHILE THE CALL IS BEING MADE AKA LOADING
-              if (ConnectionState.active != null && !snapshot.hasData) {
-                return Center(child: Text('Loading'));
+              if (snapshot.hasData) {
+                return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      return Subject(snapshot.data![index]);
+                    });
+              } else if (snapshot.hasError) {
+                return Text('${snapshot.error}');
               }
-
-              // WHEN THE CALL IS DONE BUT HAPPENS TO HAVE AN ERROR
-              if (ConnectionState.done != null && snapshot.hasError) {
-                return Center(child: Text("Błąd"));
-              }
-
-              // IF IT WORKS IT GOES HERE!
-
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: Row(
-                      children: [
-                        Text(snapshot.data![index].name + " "),
-                        snapshot.data![index].grade != null
-                            ? Text(snapshot.data![index].grade.toString())
-                            : Text(""),
-                      ],
-                    ),
-                  );
-                },
-              );
+              // By default, show a loading spinner.
+              return const CircularProgressIndicator();
             },
           ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {});
+          },
+          child: Text('Refresh'),
         ),
       ],
     );
