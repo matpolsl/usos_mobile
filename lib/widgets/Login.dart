@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -7,7 +8,8 @@ import '../usos.dart';
 class Login extends StatelessWidget {
   final pinController = TextEditingController();
   final setStatus;
-  Login(this.setStatus);
+  FlutterSecureStorage storage;
+  Login(this.setStatus, this.storage, {Key? key}) : super(key: key);
   var temporaryCredentials;
   void _authWeb() async {
     auth.requestTemporaryCredentials('oob').then((res) {
@@ -23,12 +25,20 @@ class Login extends StatelessWidget {
   }
 
   void _authButton() {
-    _authPin(pinController.text).then((res) async {
+    _authPin(pinController.text).then((resp) async {
       final client = oauth1.Client(
-          platform.signatureMethod, clientCredentials, res.credentials);
+          platform.signatureMethod, clientCredentials, resp.credentials);
       // now you can access to protected resources via client
-      client.get(Uri.parse(usosApi + 'services/users/user')).then((res) {
-        print(res.body);
+      client.get(Uri.parse(usosApi + 'services/users/user')).then((res) async {
+        print(resp.credentials.toString());
+        await storage.write(
+          key: "oauth_token",
+          value: resp.credentials.token,
+        );
+        await storage.write(
+          key: "oauth_token_secret",
+          value: resp.credentials.tokenSecret,
+        );
         setStatus(false, client);
         //services/courses/user
         //services/progs/student

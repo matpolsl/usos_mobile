@@ -17,7 +17,7 @@ class Subject extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
-                  color: Colors.purple,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
               Text(
@@ -25,7 +25,7 @@ class Subject extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Colors.purple,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
             ],
@@ -36,7 +36,7 @@ class Subject extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.purple,
+              color: Theme.of(context).primaryColor,
               width: 2,
             ),
           ),

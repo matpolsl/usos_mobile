@@ -77,7 +77,6 @@ class _UserState extends State<User> {
             return const CircularProgressIndicator();
           },
         ),
-        //testy
         Grades(client, term),
       ],
     );

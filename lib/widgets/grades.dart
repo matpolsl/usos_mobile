@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:oauth1/oauth1.dart' as oauth1;
+import 'package:usos/widgets/mean_grades.dart';
 
 import 'package:usos/widgets/subject.dart';
 import 'package:usos/models/courses_user.dart';
@@ -45,7 +46,7 @@ class _GradesState extends State<Grades> {
               courseId +
               '&term_id=' +
               termId))
-          .then((res) async {
+          .then((res) {
         //result = null;
         final json =
             ((jsonDecode(res.body))['course_grades'] as List)[0]['1'] == null
@@ -102,15 +103,23 @@ class _GradesState extends State<Grades> {
             child: Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
-                    itemBuilder: (ctx, index) => Subject(_nowGrades![index]),
-                    itemCount: _nowGrades!.length,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemBuilder: (ctx, index) =>
+                              Subject(_nowGrades![index]),
+                          itemCount: _nowGrades!.length,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: refresh,
+                        child: Text('Refresh'),
+                      ),
+                    ],
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: refresh,
-                  child: Text('Refresh'),
-                ),
+                GradesMean(_nowGrades),
               ],
             ),
           )
