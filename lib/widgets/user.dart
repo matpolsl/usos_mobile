@@ -75,7 +75,6 @@ class _UserState extends State<User> {
         objectCourse.grade = json != null
             ? double.parse(json.toString().replaceAll(',', '.'))
             : null;
-        print(objectCourse.name + " " + objectCourse.grade.toString());
       });
     } catch (_) {
       getGrade(termId, objectCourse);
@@ -129,19 +128,19 @@ class _UserState extends State<User> {
   Future fetchTerms() async {
     client
         .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
-        .then((res) {
+        .then((res) async {
       final json = jsonDecode(res.body);
+
       terms =
           (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
       term = terms!.last.termId;
+      await Future.delayed(const Duration(seconds: 1));
       getData();
     });
   }
 
-  Future getData() async {
-    setState(() {
-      refresh();
-    });
+  void getData() {
+    refresh();
   }
 
   @override
@@ -160,7 +159,7 @@ class _UserState extends State<User> {
       body: Column(
         children: [
           terms != null
-              ? DropDownTerms(terms!,setTerm)
+              ? DropDownTerms(terms!, setTerm)
               : const Center(
                   child: CircularProgressIndicator(),
                 ),

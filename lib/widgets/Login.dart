@@ -17,7 +17,6 @@ class Login extends StatelessWidget {
   void _authWeb() async {
     auth.requestTemporaryCredentials('oob').then((res) {
       temporaryCredentials = res;
-      print(temporaryCredentials.credentials.toString());
       launch(auth.getResourceOwnerAuthorizationURI(
           temporaryCredentials.credentials.token));
     });

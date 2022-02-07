@@ -10,7 +10,6 @@ class Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(programmes[0].name);
     return Drawer(
         child: ListView(
       // Important: Remove any padding from the ListView.

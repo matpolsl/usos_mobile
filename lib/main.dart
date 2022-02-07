@@ -56,8 +56,6 @@ class _HomePageState extends State<HomePage> {
     String? _tokenStroage = await storage.read(key: "oauth_token");
     String? _tokenSecretStroage = await storage.read(key: "oauth_token_secret");
     if (_tokenStroage != null && _tokenSecretStroage != null) {
-      print(_tokenStroage);
-
       final credit = oauth1.Credentials(_tokenStroage, _tokenSecretStroage);
       final client =
           oauth1.Client(platform.signatureMethod, clientCredentials, credit);
