@@ -3,40 +3,47 @@ import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:flutter/material.dart';
 import 'package:usos/models/courses_user.dart';
 import 'package:http/http.dart' as http;
+import 'package:usos/models/programme.dart';
 import 'package:usos/models/terms.dart';
 import 'package:usos/models/user_data.dart';
 import 'package:usos/usos.dart';
 import 'package:usos/widgets/grades.dart';
 import 'package:usos/widgets/menu.dart';
 
+import 'drop_down_terms.dart';
+
 class User extends StatefulWidget {
-  User(this.client,this.nameUser, {Key? key}) : super(key: key);
+  User(this.client, this.nameUser, {Key? key}) : super(key: key);
   late oauth1.Client client;
   late UserData nameUser;
   @override
-  _UserState createState() => _UserState(client,nameUser);
+  _UserState createState() => _UserState(client, nameUser);
 }
 
 class _UserState extends State<User> {
   late oauth1.Client client;
   late UserData nameUser;
   late Future<Map<String, dynamic>> courses;
-  late Future<List<Terms>> terms;
+  List<Terms>? terms;
   _UserState(this.client, this.nameUser);
-  late String term;
+  String? term;
   List<CoursesUser>? _nowGrades;
+  List<Programme> programmes = [];
   @override
   void initState() {
     super.initState();
-    //fetchName();
-
-    terms = fetchTerms();
-    getData();
+    fetchProgs();
+    fetchTerms();
   }
 
-  Future fetchName() async {
-    client.get(Uri.parse(usosApi + 'services/users/user')).then((res) {
-      nameUser = UserData.fromJson(jsonDecode(res.body));
+  Future fetchProgs() async {
+    programmes = [];
+    client.get(Uri.parse(usosApi + 'services/progs/student')).then((res) {
+      ((jsonDecode(res.body) as List))
+          .map((data) => Programme.fromJson(data))
+          .forEach((element) {
+        programmes.add(element);
+      });
     });
   }
 
@@ -114,23 +121,26 @@ class _UserState extends State<User> {
     });
   }
 
-  Future<List<Terms>> fetchTerms() async {
-    return client
+  void setTerm(String newTerm) {
+    term = newTerm;
+    refresh();
+  }
+
+  Future fetchTerms() async {
+    client
         .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
         .then((res) {
       final json = jsonDecode(res.body);
-      return (json['terms'] as List)
-          .map((data) => Terms.fromJson(data))
-          .toList();
+      terms =
+          (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
+      term = terms!.last.termId;
+      getData();
     });
   }
 
   Future getData() async {
-    fetchTerms().then((result) {
-      setState(() {
-        term = result.last.termId;
-        refresh();
-      });
+    setState(() {
+      refresh();
     });
   }
 
@@ -146,12 +156,17 @@ class _UserState extends State<User> {
           )
         ],
       ),
-      drawer: Menu(nameUser),
+      drawer: Menu(nameUser, programmes),
       body: Column(
         children: [
+          terms != null
+              ? DropDownTerms(terms!,setTerm)
+              : const Center(
+                  child: CircularProgressIndicator(),
+                ),
           _nowGrades != null
               ? Grades(_nowGrades!)
-              : Center(
+              : const Center(
                   child: CircularProgressIndicator(),
                 ),
         ],
