@@ -11,7 +11,6 @@ class CoursesUser {
   });
 
   factory CoursesUser.fromJson(Map<String, dynamic> json) {
-    print(json['course_name']['pl']);
     return CoursesUser(
       courseId: json['course_id'],
       name: json['course_name']['pl'],

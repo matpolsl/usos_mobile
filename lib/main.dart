@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:oauth1/oauth1.dart' as oauth1;
@@ -5,6 +7,7 @@ import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:usos/widgets/login.dart';
 import 'package:usos/widgets/user.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'models/user_data.dart';
 import 'usos.dart';
 
 void main() {
@@ -21,11 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Usos PŚ"),
-          ),
-          body: const HomePage()),
+      home: const HomePage(),
     );
   }
 }
@@ -44,8 +43,8 @@ class _HomePageState extends State<HomePage> {
     load();
   }
 
-  var _status = true;
-  late oauth1.Client _client;
+  late UserData _name;
+  oauth1.Client? _client;
   // Read value
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
@@ -56,27 +55,37 @@ class _HomePageState extends State<HomePage> {
     //await storage.write(key: "token", value: null);
     String? _tokenStroage = await storage.read(key: "oauth_token");
     String? _tokenSecretStroage = await storage.read(key: "oauth_token_secret");
-    print("Token:");
-    print(_tokenStroage);
     if (_tokenStroage != null && _tokenSecretStroage != null) {
+      print(_tokenStroage);
+
       final credit = oauth1.Credentials(_tokenStroage, _tokenSecretStroage);
       final client =
           oauth1.Client(platform.signatureMethod, clientCredentials, credit);
-      _setStatus(false, client);
+      client.get(Uri.parse(usosApi + 'services/users/user')).then((res) async {
+        try {
+          final name = UserData.fromJson(jsonDecode(res.body));
+          _setStatus(client, name);
+        } catch (e) {
+          await storage.delete(
+            key: "oauth_token",
+          );
+          await storage.delete(
+            key: "oauth_token_secret",
+          );
+        }
+      });
     }
   }
 
-  _setStatus(status, client) {
+  _setStatus(client, name) {
     setState(() {
-      _status = status;
       _client = client;
+      _name = name;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return _status //todo read token
-        ? Login(_setStatus, storage)
-        : User(_client);
+    return _client == null ? Login(_setStatus, storage) : User(_client!, _name);
   }
 }
