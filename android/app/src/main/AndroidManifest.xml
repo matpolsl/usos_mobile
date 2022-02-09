@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bereta.usos">
+    package="com.example.usos">
    <application
         android:label="usos"
         android:name="${applicationName}"

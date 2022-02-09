@@ -26,7 +26,7 @@ class Login extends StatelessWidget {
     return auth.requestTokenCredentials(temporaryCredentials.credentials, pin);
   }
 
-  void _authButton() {
+  void _authButton(context) {
     _authPin(pinController.text).then((resp) async {
       final client = oauth1.Client(
           platform.signatureMethod, clientCredentials, resp.credentials);
@@ -42,8 +42,15 @@ class Login extends StatelessWidget {
             key: "oauth_token_secret",
             value: resp.credentials.tokenSecret,
           );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Zalogowano: ${name.firstName} ${name.lastName}"),
+          ));
           setStatus(client, name);
-        } catch (e) {}
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(res.body.toString()),
+          ));
+        }
         //services/courses/user
         //services/progs/student
         //services/grades/course_edition2?course_id=".$kurs."&term_id=2020/2021-Z
@@ -80,7 +87,7 @@ class Login extends StatelessWidget {
                   onSubmitted: (_) => _authButton),
             ),
             ElevatedButton(
-              onPressed: _authButton,
+              onPressed: () => _authButton(context),
               child: Text('Zaloguj'),
             ),
           ],

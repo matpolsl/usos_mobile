@@ -65,18 +65,25 @@ class _UserState extends State<User> {
               objectCourse.courseId +
               '&term_id=' +
               termId))
-          .then((res) {
+          .then((res) async {
         //result = null;
-        final json =
-            ((jsonDecode(res.body))['course_grades'] as List)[0]['1'] == null
-                ? null
-                : ((jsonDecode(res.body))['course_grades'] as List)[0]['1']
-                    ['value_symbol'];
-        objectCourse.grade = json != null
-            ? double.parse(json.toString().replaceAll(',', '.'))
-            : null;
+        try {
+          final json =
+              ((jsonDecode(res.body))['course_grades'] as List)[0]['1'] == null
+                  ? null
+                  : ((jsonDecode(res.body))['course_grades'] as List)[0]['1']
+                      ['value_symbol'];
+          print(json);
+          objectCourse.grade = json != null
+              ? double.parse(json.toString().replaceAll(',', '.'))
+              : null;
+        } catch (e) {
+          print("Error");
+          getGrade(termId, objectCourse);
+        }
       });
     } catch (_) {
+      print("Error");
       getGrade(termId, objectCourse);
     }
   }
@@ -100,16 +107,16 @@ class _UserState extends State<User> {
             grade: null,
             ects: ects,
           );
-
-          await getGrade(term, object);
-
+          getGrade(term, object);
+          userGrades.sort((a, b) => a.name.compareTo(b.name));
           userGrades.add(object);
+          await Future.delayed(const Duration(seconds: 1));
+          userGrades.sort((a, b) => a.name.compareTo(b.name));
+          setState(() {
+            _nowGrades = userGrades;
+          });
         });
       });
-    });
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _nowGrades = userGrades;
     });
   }
 
@@ -128,15 +135,16 @@ class _UserState extends State<User> {
   Future fetchTerms() async {
     client
         .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
-        .then((res) async {
+        .then((res) {
       final json = jsonDecode(res.body);
 
       terms =
           (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
       term = terms!.last.termId;
-      await Future.delayed(const Duration(seconds: 1));
-      getData();
+      setState(() {});
     });
+    await Future.delayed(const Duration(seconds: 1));
+    getData();
   }
 
   void getData() {
