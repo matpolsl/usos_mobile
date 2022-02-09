@@ -6,7 +6,9 @@ import '../models/programme.dart';
 class Menu extends StatelessWidget {
   late UserData nameUser;
   List<Programme> programmes;
-  Menu(this.nameUser, this.programmes, {Key? key}) : super(key: key);
+  late Function setProg;
+  Menu(this.nameUser, this.programmes, this.setProg, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +17,24 @@ class Menu extends StatelessWidget {
       // Important: Remove any padding from the ListView.
       padding: EdgeInsets.zero,
       children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.indigo,
+        Container(
+          height: 150,
+          child: DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.indigo,
+            ),
+            child: Container(
+              alignment: Alignment.bottomLeft,
+              height: 10,
+              child: Text(
+                "${nameUser.firstName} ${nameUser.lastName}",
+                style: const TextStyle(
+                  fontSize: 25,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
-          child: Text(nameUser.firstName + " " + nameUser.lastName),
         ),
         ListView.builder(
           padding: EdgeInsets.zero,
@@ -27,9 +42,7 @@ class Menu extends StatelessWidget {
           itemBuilder: (ctx, index) => ListTile(
             title: Text(programmes[index].name),
             onTap: () {
-              // Update the state of the app
-              // ...
-              // Then close the drawer
+              setProg(index);
               Navigator.pop(context);
             },
           ),

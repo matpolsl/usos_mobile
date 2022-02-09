@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:usos/models/courses_user.dart';
 
-class GradesMean extends StatefulWidget {
-  GradesMean(this.grades, {Key? key}) : super(key: key);
-  late List<CoursesUser>? grades;
-
-  @override
-  _GradesMeanState createState() => _GradesMeanState(grades);
-}
-
-class _GradesMeanState extends State<GradesMean> {
-  late List<CoursesUser>? grades;
-  _GradesMeanState(this.grades);
+class GradesMean extends StatelessWidget {
+  const GradesMean(this.grades, {Key? key}) : super(key: key);
+  final List<CoursesUser>? grades;
   double mean(List<CoursesUser>? grades) {
     var sum = 0.0;
     var sumECTS = 0;
@@ -33,7 +25,7 @@ class _GradesMeanState extends State<GradesMean> {
       }
       sumECTS += item.ects!;
     }
-    return "${sum}/${sumECTS}";
+    return "$sum/$sumECTS";
   }
 
   @override
@@ -45,8 +37,8 @@ class _GradesMeanState extends State<GradesMean> {
           width: 2,
         ),
       ),
-      padding: EdgeInsets.all(5),
-      margin: EdgeInsets.all(10),
+      padding: const EdgeInsets.all(5),
+      margin: const EdgeInsets.all(10),
       child: Row(
         children: [
           Text(

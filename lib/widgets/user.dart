@@ -27,6 +27,7 @@ class _UserState extends State<User> {
   List<Terms>? terms;
   _UserState(this.client, this.nameUser);
   String? term;
+  var indexOfProg = 0;
   List<CoursesUser>? _nowGrades;
   List<Programme> programmes = [];
   @override
@@ -94,28 +95,33 @@ class _UserState extends State<User> {
       (value[term] as List)
           .map((data) => CoursesUser.fromJson(data))
           .forEach((element) async {
-        Future.delayed(const Duration(seconds: 5));
-        await http
-            .get(Uri.parse(
-                "https://usos.ct8.pl/ects.php?CODE=" + element.courseId))
-            .then((res) async {
-          final ects = (jsonDecode(res.body))['ects'];
-          //getGrade(element.courseId, term).then((value) => _grade = value);
-          final object = CoursesUser(
-            courseId: element.courseId,
-            name: element.name,
-            grade: null,
-            ects: ects,
-          );
-          getGrade(term, object);
-          userGrades.sort((a, b) => a.name.compareTo(b.name));
-          userGrades.add(object);
-          await Future.delayed(const Duration(seconds: 1));
-          userGrades.sort((a, b) => a.name.compareTo(b.name));
-          setState(() {
-            _nowGrades = userGrades;
+        if (element.courseId.substring(0, element.courseId.indexOf('>')) ==
+            programmes[indexOfProg]
+                .id
+                .substring(0, programmes[indexOfProg].id.indexOf('-'))) {
+          Future.delayed(const Duration(seconds: 5));
+          await http
+              .get(Uri.parse(
+                  "https://usos.ct8.pl/ects.php?CODE=" + element.courseId))
+              .then((res) async {
+            final ects = (jsonDecode(res.body))['ects'];
+            //getGrade(element.courseId, term).then((value) => _grade = value);
+            final object = CoursesUser(
+              courseId: element.courseId,
+              name: element.name,
+              grade: null,
+              ects: ects,
+            );
+            getGrade(term, object);
+            userGrades.sort((a, b) => a.name.compareTo(b.name));
+            userGrades.add(object);
+            await Future.delayed(const Duration(seconds: 1));
+            userGrades.sort((a, b) => a.name.compareTo(b.name));
+            setState(() {
+              _nowGrades = userGrades;
+            });
           });
-        });
+        }
       });
     });
   }
@@ -132,18 +138,32 @@ class _UserState extends State<User> {
     refresh();
   }
 
-  Future fetchTerms() async {
-    client
-        .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
-        .then((res) {
-      final json = jsonDecode(res.body);
+  void setProg(int newProg) {
+    indexOfProg = newProg;
+    refresh();
+  }
 
-      terms =
-          (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
-      term = terms!.last.termId;
-      setState(() {});
-    });
-    await Future.delayed(const Duration(seconds: 1));
+  Future fetchTerms() async {
+    try {
+      client
+          .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
+          .then((res) {
+        try {
+          final json = jsonDecode(res.body);
+
+          terms = (json['terms'] as List)
+              .map((data) => Terms.fromJson(data))
+              .toList();
+          term = terms!.last.termId;
+          setState(() {});
+        } catch (_) {
+          fetchTerms();
+        }
+      });
+      await Future.delayed(const Duration(seconds: 1));
+    } catch (_) {
+      fetchTerms();
+    }
     getData();
   }
 
@@ -155,7 +175,7 @@ class _UserState extends State<User> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Usos PŚ"),
+        title: Text(programmes[indexOfProg].name),
         actions: [
           IconButton(
             onPressed: () => refresh(),
@@ -163,7 +183,7 @@ class _UserState extends State<User> {
           )
         ],
       ),
-      drawer: Menu(nameUser, programmes),
+      drawer: Menu(nameUser, programmes, setProg),
       body: Column(
         children: [
           terms != null
