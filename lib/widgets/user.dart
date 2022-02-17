@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'package:oauth1/oauth1.dart' as oauth1;
 import 'package:flutter/material.dart';
-import 'package:usos/models/courses_user.dart';
 import 'package:http/http.dart' as http;
-import 'package:usos/models/programme.dart';
-import 'package:usos/models/terms.dart';
-import 'package:usos/models/user_data.dart';
-import 'package:usos/usos.dart';
-import 'package:usos/widgets/grades.dart';
-import 'package:usos/widgets/menu.dart';
 
-import 'drop_down_terms.dart';
+import '../models/programme.dart';
+import '../models/terms.dart';
+import '../models/user_data.dart';
+import '../widgets/grades.dart';
+import '../usos.dart';
+import '../widgets/menu.dart';
+import '../models/courses_user.dart';
+import '../widgets/drop_down_terms.dart';
 
 class User extends StatefulWidget {
   User(this.client, this.nameUser, {Key? key}) : super(key: key);
@@ -121,22 +121,13 @@ class _UserState extends State<User> {
 
   Future fetchTerms() async {
     try {
-      client
-          .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
-          .then((res) {
-        try {
-          final json = jsonDecode(res.body);
-
-          terms = (json['terms'] as List)
-              .map((data) => Terms.fromJson(data))
-              .toList();
-          term = terms!.last.termId;
-          setState(() {});
-        } catch (_) {
-          fetchTerms();
-        }
-      });
-      await Future.delayed(const Duration(seconds: 1));
+      var response = await client
+          .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'));
+      final json = jsonDecode(response.body);
+      terms =
+          (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
+      term = terms!.last.termId;
+      setState(() {});
     } catch (_) {
       fetchTerms();
     }
