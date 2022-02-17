@@ -45,12 +45,11 @@ class _HomePageState extends State<HomePage> {
 
   late UserData _name;
   oauth1.Client? _client;
-  // Read value
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );
   final storage = const FlutterSecureStorage();
-  //final options = const IOSOptions(accessibility: IOSAccessibility.first_unlock);
+
   Future load() async {
     //await storage.write(key: "token", value: null);
     String? _tokenStroage = await storage.read(key: "oauth_token");

@@ -27,6 +27,7 @@ class _UserState extends State<User> {
   List<Terms>? terms;
   _UserState(this.client, this.nameUser);
   String? term;
+  var indexOfProg = 0;
   List<CoursesUser>? _nowGrades;
   List<Programme> programmes = [];
   @override
@@ -59,29 +60,19 @@ class _UserState extends State<User> {
 
   Future getGrade(termId, CoursesUser objectCourse) async {
     try {
-      client
-          .get(Uri.parse(usosApi +
-              'services/grades/course_edition2?course_id=' +
-              objectCourse.courseId +
-              '&term_id=' +
-              termId))
-          .then((res) async {
-        //result = null;
-        try {
-          final json =
-              ((jsonDecode(res.body))['course_grades'] as List)[0]['1'] == null
-                  ? null
-                  : ((jsonDecode(res.body))['course_grades'] as List)[0]['1']
-                      ['value_symbol'];
-          print(json);
-          objectCourse.grade = json != null
-              ? double.parse(json.toString().replaceAll(',', '.'))
-              : null;
-        } catch (e) {
-          print("Error");
-          getGrade(termId, objectCourse);
-        }
-      });
+      var response = await client.get(Uri.parse(usosApi +
+          'services/grades/course_edition2?course_id=' +
+          objectCourse.courseId +
+          '&term_id=' +
+          termId));
+      final json =
+          ((jsonDecode(response.body))['course_grades'] as List)[0]['1'] == null
+              ? null
+              : ((jsonDecode(response.body))['course_grades'] as List)[0]['1']
+                  ['value_symbol'];
+      objectCourse.grade = json != null
+          ? double.parse(json.toString().replaceAll(',', '.'))
+          : null;
     } catch (_) {
       print("Error");
       getGrade(termId, objectCourse);
@@ -90,45 +81,41 @@ class _UserState extends State<User> {
 
   Future fetchCoursesByTerm(term) async {
     List<CoursesUser> userGrades = [];
-    fetchCourses().then((value) {
-      (value[term] as List)
-          .map((data) => CoursesUser.fromJson(data))
-          .forEach((element) async {
-        Future.delayed(const Duration(seconds: 5));
-        await http
-            .get(Uri.parse(
-                "https://usos.ct8.pl/ects.php?CODE=" + element.courseId))
-            .then((res) async {
-          final ects = (jsonDecode(res.body))['ects'];
-          //getGrade(element.courseId, term).then((value) => _grade = value);
-          final object = CoursesUser(
-            courseId: element.courseId,
-            name: element.name,
-            grade: null,
-            ects: ects,
-          );
-          getGrade(term, object);
-          userGrades.sort((a, b) => a.name.compareTo(b.name));
-          userGrades.add(object);
-          await Future.delayed(const Duration(seconds: 1));
-          userGrades.sort((a, b) => a.name.compareTo(b.name));
-          setState(() {
-            _nowGrades = userGrades;
-          });
-        });
-      });
+    var coursesResponse = await fetchCourses();
+    var coursesResponseByTerm = (coursesResponse[term] as List)
+        .map((data) => CoursesUser.fromJson(data));
+    await Future.forEach(coursesResponseByTerm, (CoursesUser element) async {
+      if (element.courseId.substring(0, element.courseId.indexOf('>')) ==
+          programmes[indexOfProg]
+              .id
+              .substring(0, programmes[indexOfProg].id.indexOf('-'))) {
+        var ectsResponse = await http.get(
+            Uri.parse("https://usos.ct8.pl/ects.php?CODE=" + element.courseId));
+        element.setECTS((jsonDecode(ectsResponse.body))['ects']);
+        await getGrade(term, element);
+        userGrades.add(element);
+      }
+    });
+    userGrades.sort((a, b) => a.name.compareTo(b.name));
+    setState(() {
+      _nowGrades = userGrades;
     });
   }
 
   Future refresh() async {
     setState(() {
       _nowGrades = null;
-      fetchCoursesByTerm(term);
     });
+    fetchCoursesByTerm(term);
   }
 
-  void setTerm(String newTerm) {
-    term = newTerm;
+  void setTerm(int newTerm) {
+    indexOfProg = newTerm;
+    refresh();
+  }
+
+  void setProg(int newProg) {
+    indexOfProg = newProg;
     refresh();
   }
 
@@ -144,10 +131,6 @@ class _UserState extends State<User> {
       setState(() {});
     });
     await Future.delayed(const Duration(seconds: 1));
-    getData();
-  }
-
-  void getData() {
     refresh();
   }
 
@@ -155,7 +138,9 @@ class _UserState extends State<User> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Usos PŚ"),
+        title: programmes.isEmpty
+            ? Text("USOS PŚ")
+            : Text(programmes[indexOfProg].name),
         actions: [
           IconButton(
             onPressed: () => refresh(),
@@ -163,7 +148,7 @@ class _UserState extends State<User> {
           )
         ],
       ),
-      drawer: Menu(nameUser, programmes),
+      drawer: Menu(nameUser, programmes, setTerm),
       body: Column(
         children: [
           terms != null
