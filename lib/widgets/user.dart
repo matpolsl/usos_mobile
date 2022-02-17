@@ -120,17 +120,30 @@ class _UserState extends State<User> {
   }
 
   Future fetchTerms() async {
-    client
-        .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
-        .then((res) {
-      final json = jsonDecode(res.body);
+    try {
+      client
+          .get(Uri.parse(usosApi + 'services/courses/user?fields=terms'))
+          .then((res) {
+        try {
+          final json = jsonDecode(res.body);
 
-      terms =
-          (json['terms'] as List).map((data) => Terms.fromJson(data)).toList();
-      term = terms!.last.termId;
-      setState(() {});
-    });
-    await Future.delayed(const Duration(seconds: 1));
+          terms = (json['terms'] as List)
+              .map((data) => Terms.fromJson(data))
+              .toList();
+          term = terms!.last.termId;
+          setState(() {});
+        } catch (_) {
+          fetchTerms();
+        }
+      });
+      await Future.delayed(const Duration(seconds: 1));
+    } catch (_) {
+      fetchTerms();
+    }
+    refresh();
+  }
+
+  void getData() {
     refresh();
   }
 
@@ -148,7 +161,7 @@ class _UserState extends State<User> {
           )
         ],
       ),
-      drawer: Menu(nameUser, programmes, setTerm),
+      drawer: Menu(nameUser, programmes, setProg),
       body: Column(
         children: [
           terms != null
